@@ -66,6 +66,16 @@ void loop() {
 				dropLoad();
 				hasLoad = false;
 			}
+
+			if(numberBoth % 2 == 1) {
+				if (numberLoad % 2 == 1) {
+					turnRight();
+				}
+				else {
+					turnLeft();
+				}
+				numberLoad++;
+			}
 			if (!trigger) {
 				numberBoth++;
 				trigger = true;
@@ -227,5 +237,17 @@ void dropLoad()
 	delay(600);
 	setLeftWheel(false, speedOff);
 	setRightWheel(false, speedOff);
+}
+
+void turnRight() {
+	right();
+	delay(300);
+	stop();
+}
+void turnLeft() 
+{
+	left();
+	delay(300);
+	stop();
 }
 
