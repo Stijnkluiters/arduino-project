@@ -80,7 +80,6 @@ void loop() {
 				numberBoth++;
 				trigger = true;
 			}
-			// hier moet de logica voor het lossen
 		}
 		// hier moeten we naar rechts want de linker sensor heeft een lijn gedetecteerd.
 		else if (getSensor1() && !getSensor2()) {
