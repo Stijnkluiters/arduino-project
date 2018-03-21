@@ -12,10 +12,10 @@
 int speedSanic = 254;
 
 int speedFast = 220;
-int speedRegular = 150;
-int speedSlow = 70;
+int speedRegular = 100;
+int speedSlow = 60;
 int speedUltraSlow = 40;
-int speedOff = 0;
+int speedOff = 1;
 
 // digital pins
 int wheelEnableRight = 10;
@@ -39,7 +39,7 @@ int sensor4 = 4;
 // check if sensor has black or white underground.
 // lower than given value is white,
 // higher tha given value is black;
-int whiteOrBlackSwitch = 400;
+int whiteOrBlackSwitch = 600;
 // these timers are used to correct the sensors, we weren't sure if the infrared singals were lost or not. so we used a 100MS delay to compare both statuses
 bool previousStatus1 = false;
 long previousMillis1 = 0;        // will store last time Sensor1 was updated
@@ -53,7 +53,7 @@ long previousMillis3 = 0;        // will store last time Sensor3 was updated
 bool previousStatus4 = false;
 long previousMillis4 = 0;        // will store last time Sensor4 was updated
 
-long interval = 100;            // interval at which to blink ( miliseconds )
+long interval = 30;           // interval at which to blink ( miliseconds )
 
 
 
@@ -89,11 +89,16 @@ void setup() {
 	setupPins();
 }
 
+
+
 // the loop function runs over and over again until power down or reset
 void loop() {
 	// hier is het einde bereikt want allebij de lijnen zijn gedetecteerd
+	setLed(true);
 
+	delay(1000);
 
+	setLed(false);
 	// als de knop is ingedrukt en losgelaten
 	if (digitalRead(button) == HIGH) {
 
@@ -105,87 +110,106 @@ void loop() {
 
 	if (start) {
 		// als we lading hebben gaan we vooruit.
-		//if (hasLoad) {
+		
 			// als de robot de lading aan het lossen is moet hij voorruit
-		if (getSensor1() && getSensor2()) {
 
-			Serial.print("Stop");
-			stop();
+		Serial.println("__________________________________________");
+			if (getSensor1() && getSensor2()) {
 
-			//if (numberBoth % 2 == 0 && numberBoth != 0) {
-			//	dropLoad();
-			//	hasLoad = false;
-			//}
+				Serial.println("Stop");
 
-			//if (numberBoth % 2 == 1) {
-			//	if (numberLoad % 2 == 1) {
-			//		turnRight();
-			//	}
-			//	else {
-			//		turnLeft();
-			//	}
-			//	numberLoad++;
-			//}
-			//if (!trigger) {
-			//	numberBoth++;
-			//	trigger = true;
-			//}
-		}
-		// hier moeten we naar rechts want de linker sensor heeft een lijn gedetecteerd.
-		else if (getSensor1() && !getSensor2()) {
-			right();
-			Serial.print("Right");
-			trigger = false;
-		}
-		else if (!getSensor1() && getSensor2()) {
-			left();
-			Serial.print("Left");
-			trigger = false;
-		}
-		else if (!getSensor1() && !getSensor2()) {
-			forward();
-			Serial.print("Forward");
-			trigger = false;
-		}
+				if (numberBoth % 2 == 0 && numberBoth != 0) {
+
+					stop();
+				}
+				else {
+					// even bijsturen naar links of rechts
+					right();
+					delay(500);
+					left();
+					delay(200);
+					forward();
+
+				}
+
+
+
+
+		//			//dropLoad();
+	//				hasLoad = false;
+//				
+
+				//if (numberBoth % 2 == 1) {
+				//	if (numberLoad % 2 == 1) {
+				//		turnRight();
+				//	}
+				//	else {
+				//		turnLeft();
+				//	}
+				//	numberLoad++;
+				//}
+				//if (!trigger) {
+				//	numberBoth++;
+				//	trigger = true;
+				//}
+			}
+			// hier moeten we naar rechts want de linker sensor heeft een lijn gedetecteerd.
+			else if (getSensor1() && !getSensor2()) {
+				left();
+				Serial.println("Right");
+				trigger = false;
+			}
+			else if (!getSensor1() && getSensor2()) {
+				right();
+				Serial.println("Left");
+				trigger = false;
+			}
+			else if (!getSensor1() && !getSensor2()) {
+				forward();
+
+				Serial.println("Forward");
+				trigger = false;
+			}
+
+			Serial.println("__________________________________________");
+		// als we geen lading hebben gaan we achteruit.
+		//else {
+
+		//	if (getSensor3() && getSensor4()) {
+
+		//		if (numberBoth % 2 == 0 && numberBoth != 0) {
+
+
+		//			stop();
+
+		//			setLed(true);
+		//			// wachten totdat hij geen ldr meer heeft.
+		//			while (getLdr() > 800) {}
+		//			setLed(false);
+		//			hasLoad = true;
+		//		}
+		//		if (!trigger) {
+		//			numberBoth++;
+		//			trigger = true;
+		//		}
+		//	}
+		//	// hier moeten we naar rechts want de linker sensor heeft een lijn gedetecteerd.
+		//	else if (getSensor3() && !getSensor4()) {
+		//		/*setLeftWheel(false, speedSlow);
+		//		setRightWheel(false, speedRegular);*/
+		//		trigger = false;
+		//	}
+		//	else if (!getSensor3() && getSensor4()) {
+		//		/*setLeftWheel(false, speedRegular);
+		//		setRightWheel(false, speedSlow);*/
+		//		trigger = false;
+		//	}
+		//	else if (!getSensor3() && !getSensor4()) {
+		//		backward();
+		//		trigger = false;
+		//	}
+		//}
 	}
-	// als we geen lading hebben gaan we achteruit.
-//	else {
-
-//		if (getSensor3() && getSensor4()) {
-
-//			if (numberBoth % 2 == 0 && numberBoth != 0) {
-
-
-//				stop();
-
-//				setLed(true);
-//				// wachten totdat hij geen ldr meer heeft.
-//				while (getLdr() > 800) {}
-//				setLed(false);
-//				hasLoad = true;
-//			}
-//			if (!trigger) {
-//				numberBoth++;
-//				trigger = true;
-//			}
-//		}
-//		// hier moeten we naar rechts want de linker sensor heeft een lijn gedetecteerd.
-//		else if (getSensor3() && !getSensor4()) {
-//			setLeftWheel(false, speedSlow);
-//			setRightWheel(false, speedRegular);
-//			trigger = false;
-//		}
-//		else if (!getSensor3() && getSensor4()) {
-//			setLeftWheel(false, speedRegular);
-//			setRightWheel(false, speedSlow);
-//			trigger = false;
-//		}
-//		else if (!getSensor3() && !getSensor4()) {
-//			backward();
-//			trigger = false;
-//		}
-//	}
-//}
 	else {
 		stop();
 	}
@@ -195,11 +219,16 @@ void loop() {
 }
 
 
-
 bool getSensor1()
 {
 	unsigned long currentMillis = millis();
-	bool currentStatus = (sensor1 > whiteOrBlackSwitch);
+	bool currentStatus = (analogRead(sensor1) > whiteOrBlackSwitch);
+	Serial.println("Current status 1:");
+	Serial.println(currentStatus);
+	Serial.println("Previous status 1:");
+	Serial.println(previousStatus1);
+	Serial.println("AnalogRead 1");
+	Serial.println(analogRead(sensor1));
 	/**
 	* if the current millis minus the previous millis is higher than the setten interval.
 	*
@@ -213,7 +242,7 @@ bool getSensor1()
 		*
 		* else return the previous status
 		*/
-		bool returnstatus = false;
+		bool returnstatus = true;
 		if (currentStatus == previousStatus1) {
 			returnstatus = currentStatus;
 		}
@@ -228,13 +257,24 @@ bool getSensor1()
 		previousMillis1 = currentMillis;
 		previousStatus1 = currentStatus;
 	}
+
+	Serial.println("Previous status 1:");
+	Serial.println(previousStatus1);
+
 	return previousStatus1;
 }
 
 bool getSensor2()
 {
 	unsigned long currentMillis = millis();
-	bool currentStatus = (sensor2 > whiteOrBlackSwitch);
+	bool currentStatus = (analogRead(sensor2) > whiteOrBlackSwitch);
+	Serial.println("Current status 2:");
+	Serial.println(currentStatus);
+	Serial.println("Previous status 2:");
+	Serial.println(previousStatus2);
+	Serial.println("AnalogRead 2");
+	Serial.println(analogRead(sensor2));
+
 	/**
 	* if the current millis minus the previous millis is higher than the setten interval.
 	*
@@ -248,7 +288,7 @@ bool getSensor2()
 		*
 		* else return the previous status
 		*/
-		bool returnstatus = false;
+		bool returnstatus = true;
 		if (currentStatus == previousStatus2) {
 			returnstatus = currentStatus;
 		}
@@ -263,13 +303,15 @@ bool getSensor2()
 		previousMillis2 = currentMillis;
 		previousStatus2 = currentStatus;
 	}
+
+
 	return previousStatus2;
 }
 
 bool getSensor3()
 {
 	unsigned long currentMillis = millis();
-	bool currentStatus = (sensor3 > whiteOrBlackSwitch);
+	bool currentStatus = (analogRead(sensor3) > whiteOrBlackSwitch);
 	/**
 	* if the current millis minus the previous millis is higher than the setten interval.
 	*
@@ -283,7 +325,7 @@ bool getSensor3()
 		*
 		* else return the previous status
 		*/
-		bool returnstatus = false;
+		bool returnstatus = true;
 		if (currentStatus == previousStatus3) {
 			returnstatus = currentStatus;
 		}
@@ -304,7 +346,7 @@ bool getSensor3()
 bool getSensor4()
 {
 	unsigned long currentMillis = millis();
-	bool currentStatus = (sensor4 > whiteOrBlackSwitch);
+	bool currentStatus = (analogRead(sensor4) > whiteOrBlackSwitch);
 	/**
 	* if the current millis minus the previous millis is higher than the setten interval.
 	*
@@ -337,22 +379,10 @@ bool getSensor4()
 }
 
 
-
-
-
-// status moet de voorruit of achtertuit voorstellen
-void setLeftWheel(boolean status, int speed = 0) {
-	if (status) {
-		analogWrite(wheelEnableLeft, speed);
-		digitalWrite(wheelDORLeft, HIGH);
-	}
-	else {
-		analogWrite(wheelEnableLeft, speed);
-		digitalWrite(wheelDORLeft, LOW);
-	}
-}
 // status moet de voorruit of achtertuit voorstellen
 void setRightWheel(boolean status, int speed) {
+	// linker motor is minder sterk.
+	
 	if (status) {
 		analogWrite(wheelEnableRight, speed);
 		digitalWrite(wheelDORRight, HIGH);
@@ -362,6 +392,20 @@ void setRightWheel(boolean status, int speed) {
 		digitalWrite(wheelDORRight, LOW);
 	}
 }
+
+// status moet de voorruit of achtertuit voorstellen
+void setLeftWheel(boolean status, int speed = 0) {
+	speed = speed + 5;
+	if (status) {
+		analogWrite(wheelEnableLeft, speed);
+		digitalWrite(wheelDORLeft, HIGH);
+	}
+	else {
+		analogWrite(wheelEnableLeft, speed);
+		digitalWrite(wheelDORLeft, LOW);
+	}
+}
+
 void setLed(boolean enabled) {
 	if (enabled)
 	{
@@ -385,12 +429,12 @@ void forward() {
 
 void right() {
 	setRightWheel(true, speedSlow);
-	setLeftWheel(true, speedUltraSlow);
+	setLeftWheel(false, speedSlow);
 }
 
 void left() {
-	setLeftWheel(true, speedSlow);
-	setRightWheel(true, speedUltraSlow);
+	setLeftWheel(false, speedSlow);
+	setRightWheel(true, speedSlow);
 }
 void backward() {
 	setLeftWheel(false, speedSlow);
@@ -398,8 +442,8 @@ void backward() {
 }
 void stop()
 {
-	setLeftWheel(false, speedOff);
-	setRightWheel(false, speedOff);
+	setLeftWheel(true, speedOff);
+	setRightWheel(true, speedOff);
 }
 void dropLoad()
 {
