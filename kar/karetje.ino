@@ -13,8 +13,8 @@ int speedSanic = 254;
 
 int speedFast = 220;
 int speedRegular = 150;
-int speedSlow = 50;
-int speedUltraSlow = 15;
+int speedSlow = 70;
+int speedUltraSlow = 40;
 int speedOff = 0;
 
 // digital pins
@@ -23,8 +23,9 @@ int wheelEnableLeft = 11;
 int wheelDORRight = 12;
 int wheelDORLeft = 13;
 int led = 9;
+int button = 8;
 
-bool hasLoad = false;
+bool hasLoad = true;
 int numberLoad = 0;
 int numberBoth = 0;
 
@@ -35,21 +36,56 @@ int sensor2 = 2;
 int sensor3 = 3;
 int sensor4 = 4;
 
+// check if sensor has black or white underground.
+// lower than given value is white,
+// higher tha given value is black;
+int whiteOrBlackSwitch = 400;
+// these timers are used to correct the sensors, we weren't sure if the infrared singals were lost or not. so we used a 100MS delay to compare both statuses
+bool previousStatus1 = false;
+long previousMillis1 = 0;        // will store last time Sensor1 was updated
+
+bool previousStatus2 = false;
+long previousMillis2 = 0;        // will store last time Sensor2 was updated
+
+bool previousStatus3 = false;
+long previousMillis3 = 0;        // will store last time Sensor3 was updated
+
+bool previousStatus4 = false;
+long previousMillis4 = 0;        // will store last time Sensor4 was updated
+
+long interval = 100;            // interval at which to blink ( miliseconds )
+
+
+
+// reset button
+bool start = false;
+
 // used as a event. houd een doubele count tegen
 bool trigger = false;
+
+
+
+
 // can only be called inside the setup function.
 void setupPins() {
+
 	for (int i = 9; i < 13; i++) {
 		pinMode(i, OUTPUT);
 	}
 
+	pinMode(button, INPUT);
+
+
 	for (int i = 0; i < 4; i++) {
-		pinMode('A' + i, OUTPUT);
+		pinMode('A' + i, INPUT);
 	}
+
+
 }
 
 
 void setup() {
+	Serial.begin(9600);
 	setupPins();
 }
 
@@ -57,110 +93,250 @@ void setup() {
 void loop() {
 	// hier is het einde bereikt want allebij de lijnen zijn gedetecteerd
 
-	if (hasLoad) {
-		// als de robot de lading aan het lossen is moet hij voorruit
+
+	// als de knop is ingedrukt en losgelaten
+	if (digitalRead(button) == HIGH) {
+
+		delay(500);
+
+		start = !start;
+
+	}
+
+	if (start) {
+		// als we lading hebben gaan we vooruit.
+		//if (hasLoad) {
+			// als de robot de lading aan het lossen is moet hij voorruit
 		if (getSensor1() && getSensor2()) {
 
-			if (numberBoth % 2 == 0 && numberBoth != 0) {
-				stop();
-				dropLoad();
-				hasLoad = false;
-			}
+			Serial.print("Stop");
+			stop();
 
-			if(numberBoth % 2 == 1) {
-				if (numberLoad % 2 == 1) {
-					turnRight();
-				}
-				else {
-					turnLeft();
-				}
-				numberLoad++;
-			}
-			if (!trigger) {
-				numberBoth++;
-				trigger = true;
-			}
+			//if (numberBoth % 2 == 0 && numberBoth != 0) {
+			//	dropLoad();
+			//	hasLoad = false;
+			//}
+
+			//if (numberBoth % 2 == 1) {
+			//	if (numberLoad % 2 == 1) {
+			//		turnRight();
+			//	}
+			//	else {
+			//		turnLeft();
+			//	}
+			//	numberLoad++;
+			//}
+			//if (!trigger) {
+			//	numberBoth++;
+			//	trigger = true;
+			//}
 		}
 		// hier moeten we naar rechts want de linker sensor heeft een lijn gedetecteerd.
 		else if (getSensor1() && !getSensor2()) {
 			right();
+			Serial.print("Right");
 			trigger = false;
 		}
 		else if (!getSensor1() && getSensor2()) {
 			left();
+			Serial.print("Left");
 			trigger = false;
 		}
 		else if (!getSensor1() && !getSensor2()) {
 			forward();
+			Serial.print("Forward");
 			trigger = false;
 		}
 	}
+	// als we geen lading hebben gaan we achteruit.
+//	else {
+
+//		if (getSensor3() && getSensor4()) {
+
+//			if (numberBoth % 2 == 0 && numberBoth != 0) {
+
+
+//				stop();
+
+//				setLed(true);
+//				// wachten totdat hij geen ldr meer heeft.
+//				while (getLdr() > 800) {}
+//				setLed(false);
+//				hasLoad = true;
+//			}
+//			if (!trigger) {
+//				numberBoth++;
+//				trigger = true;
+//			}
+//		}
+//		// hier moeten we naar rechts want de linker sensor heeft een lijn gedetecteerd.
+//		else if (getSensor3() && !getSensor4()) {
+//			setLeftWheel(false, speedSlow);
+//			setRightWheel(false, speedRegular);
+//			trigger = false;
+//		}
+//		else if (!getSensor3() && getSensor4()) {
+//			setLeftWheel(false, speedRegular);
+//			setRightWheel(false, speedSlow);
+//			trigger = false;
+//		}
+//		else if (!getSensor3() && !getSensor4()) {
+//			backward();
+//			trigger = false;
+//		}
+//	}
+//}
 	else {
-
-		if (getSensor3() && getSensor4()) {
-
-			if (numberBoth % 2 == 0 && numberBoth != 0) {
-
-
-				stop();
-
-				setLed(true);
-				// wachten totdat hij geen ldr meer heeft.
-				while (getLdr()) {}
-
-				hasLoad = true;
-			}
-			if(!trigger) {
-				numberBoth++;
-				trigger = true;
-			}
-			// hier moet de logica voor het lossen
-		}
-		// hier moeten we naar rechts want de linker sensor heeft een lijn gedetecteerd.
-		else if (getSensor3() && !getSensor4()) {
-			left();
-			trigger = false;
-		}
-		else if (!getSensor3() && getSensor4()) {
-			right();
-			trigger = false;
-		}
-		else if (!getSensor3() && !getSensor4()) {
-			backward();
-			trigger = false;
-		}
+		stop();
 	}
 	// als de robot de lading heeft gelost, dan moet hij achteruit rijden.
+
+
 }
 
 
-
-/*
-* returns true if the sensor detects a white lite. else false
-*/
-bool statusSensor(int sensor) {
-	return sensor > 400;
-}
 
 bool getSensor1()
 {
-	return statusSensor(sensor1);
+	unsigned long currentMillis = millis();
+	bool currentStatus = (sensor1 > whiteOrBlackSwitch);
+	/**
+	* if the current millis minus the previous millis is higher than the setten interval.
+	*
+	* else if previous millis en status not equals null.
+	*
+	*/
+	if (currentMillis - previousMillis1 > interval) {
+		/**
+		* check if the current state is the same as the previous one.
+		* if it is the same the return that status.
+		*
+		* else return the previous status
+		*/
+		bool returnstatus = false;
+		if (currentStatus == previousStatus1) {
+			returnstatus = currentStatus;
+		}
+		else {
+			returnstatus = previousStatus1;
+		}
+		previousMillis1 = currentMillis;
+		previousStatus1 = currentStatus;
+		return returnstatus;
+	}
+	else if (previousMillis1 == NULL || previousStatus1 == NULL) {
+		previousMillis1 = currentMillis;
+		previousStatus1 = currentStatus;
+	}
+	return previousStatus1;
 }
 
 bool getSensor2()
 {
-	return statusSensor(sensor2);
+	unsigned long currentMillis = millis();
+	bool currentStatus = (sensor2 > whiteOrBlackSwitch);
+	/**
+	* if the current millis minus the previous millis is higher than the setten interval.
+	*
+	* else if previous millis en status not equals null.
+	*
+	*/
+	if (currentMillis - previousMillis2 > interval) {
+		/**
+		* check if the current state is the same as the previous one.
+		* if it is the same the return that status.
+		*
+		* else return the previous status
+		*/
+		bool returnstatus = false;
+		if (currentStatus == previousStatus2) {
+			returnstatus = currentStatus;
+		}
+		else {
+			returnstatus = previousStatus2;
+		}
+		previousMillis2 = currentMillis;
+		previousStatus2 = currentStatus;
+		return returnstatus;
+	}
+	else if (previousMillis2 == NULL || previousStatus2 == NULL) {
+		previousMillis2 = currentMillis;
+		previousStatus2 = currentStatus;
+	}
+	return previousStatus2;
 }
 
 bool getSensor3()
 {
-	return statusSensor(sensor3);
+	unsigned long currentMillis = millis();
+	bool currentStatus = (sensor3 > whiteOrBlackSwitch);
+	/**
+	* if the current millis minus the previous millis is higher than the setten interval.
+	*
+	* else if previous millis en status not equals null.
+	*
+	*/
+	if (currentMillis - previousMillis3 > interval) {
+		/**
+		* check if the current state is the same as the previous one.
+		* if it is the same the return that status.
+		*
+		* else return the previous status
+		*/
+		bool returnstatus = false;
+		if (currentStatus == previousStatus3) {
+			returnstatus = currentStatus;
+		}
+		else {
+			returnstatus = previousStatus3;
+		}
+		previousMillis3 = currentMillis;
+		previousStatus3 = currentStatus;
+		return returnstatus;
+	}
+	else if (previousMillis3 == NULL || previousStatus3 == NULL) {
+		previousMillis3 = currentMillis;
+		previousStatus3 = currentStatus;
+	}
+	return previousStatus3;
 }
 
 bool getSensor4()
 {
-	return statusSensor(sensor4);
+	unsigned long currentMillis = millis();
+	bool currentStatus = (sensor4 > whiteOrBlackSwitch);
+	/**
+	* if the current millis minus the previous millis is higher than the setten interval.
+	*
+	* else if previous millis en status not equals null.
+	*
+	*/
+	if (currentMillis - previousMillis4 > interval) {
+		/**
+		* check if the current state is the same as the previous one.
+		* if it is the same the return that status.
+		*
+		* else return the previous status
+		*/
+		bool returnstatus = false;
+		if (currentStatus == previousStatus4) {
+			returnstatus = currentStatus;
+		}
+		else {
+			returnstatus = previousStatus4;
+		}
+		previousMillis4 = currentMillis;
+		previousStatus4 = currentStatus;
+		return returnstatus;
+	}
+	else if (previousMillis4 == NULL || previousStatus4 == NULL) {
+		previousMillis4 = currentMillis;
+		previousStatus4 = currentStatus;
+	}
+	return previousStatus4;
 }
+
+
 
 
 
@@ -197,28 +373,28 @@ void setLed(boolean enabled) {
 }
 // returns between 0 - 1023
 int getLdr() {
-	return analogRead(ldrA);
+	return analogRead('A' + ldrA);
 }
 
 
 
 void forward() {
-	setLeftWheel(true, speedRegular);
-	setRightWheel(true, speedRegular);
+	setLeftWheel(true, speedSlow);
+	setRightWheel(true, speedSlow);
 }
 
 void right() {
-	setRightWheel(true, speedFast);
-	setLeftWheel(false, speedOff);
+	setRightWheel(true, speedSlow);
+	setLeftWheel(true, speedUltraSlow);
 }
 
 void left() {
-	setLeftWheel(true, speedFast);
-	setRightWheel(false, speedOff);
+	setLeftWheel(true, speedSlow);
+	setRightWheel(true, speedUltraSlow);
 }
 void backward() {
-	setLeftWheel(false, speedRegular);
-	setRightWheel(false, speedRegular);
+	setLeftWheel(false, speedSlow);
+	setRightWheel(false, speedSlow);
 }
 void stop()
 {
@@ -243,7 +419,7 @@ void turnRight() {
 	delay(300);
 	stop();
 }
-void turnLeft() 
+void turnLeft()
 {
 	left();
 	delay(300);
